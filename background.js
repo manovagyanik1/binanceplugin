@@ -1,6 +1,6 @@
 console.log('starting plugin!!!!!!');
 
-const coins = {
+var coins = {
     "VEN/BTC": {
        price: 0.00005888,
        qty: 116
@@ -57,10 +57,31 @@ const coins = {
     }
 }
 
+var totalAmount = 0;
+for (var key in coins) {
+    if (coins.hasOwnProperty(key)) {
+        console.log(key + " -> " + coins[key]);
+        totalAmount += coins[key].qty * coins[key].price;
+    }
+}
+
+console.log(totalAmount);
+
+for (var key in coins) {
+    if (coins.hasOwnProperty(key)) {
+        console.log(key + " -> " + coins[key]);
+        coins[key].percent = (coins[key].price * coins[key].qty * 100) / totalAmount;
+        coins[key].percent = Math.round(coins[key].percent);
+    }
+}
+
+
 const API_CALL_TIMEOUT = 5000;
 const REFRESH_TIME = 500;
+var currentTotal = 0;
 
 function compute() {
+    currentTotal = 0;
     rows = $('#products tr:visible');
     var length =  rows.length;
     console.log(length);
@@ -68,17 +89,24 @@ function compute() {
     for(var i=1; i<length; i++) {
         var row = rows[i];
         var symbol = row.cells[1].textContent;
-        console.log(symbol);
         if(coins[symbol]) {
             var buyPrice = coins[symbol].price;
             var buyPriceCell = row.cells[3];
             buyPriceCell.innerHTML = buyPrice;
-            var currentPrice = row.cells[2].textContent.split("/")[0].trim();
-            var change = (parseFloat(currentPrice, 10) - buyPrice) * 100 / buyPrice;
+            var currentPrice = parseFloat(row.cells[2].textContent.split("/")[0].trim(), 10);
+            var change = (currentPrice - buyPrice) * 100 / buyPrice;
             var changeCell = row.cells[4];
             changeCell.innerHTML = parseInt(change, 10) + " %";
+            var contributionCell = row.cells[5];
+            contributionCell.innerHTML = coins[symbol].percent + " %";
+            currentTotal+= currentPrice * coins[symbol].qty;
         }
     }
+    console.log("totalAmount is: ", totalAmount);
+    console.log("currentTotal is: ", currentTotal);
+
+    var overallChange = Math.round((currentTotal - totalAmount) * 100 / totalAmount);
+    $('#rate').text(overallChange + " %");
 }
 
 $( document ).ready(function() {
@@ -89,14 +117,18 @@ $( document ).ready(function() {
 
         // click on favourites
         $("li.ng-binding").first().click();
+        $( "<h1 id='rate'>Test</h1>" ).insertBefore( "#products" );
+
         var rowsCopy = $('#products tr:visible');
         rowsCopy[0].insertCell(3).innerHTML = "buy price";
         rowsCopy[0].insertCell(4).innerHTML = "% change";
+        rowsCopy[0].insertCell(5).innerHTML = "% contribution";
 
         for(var i=1; i<length; i++) {
             var row = rows[i];
             row.insertCell(3);
             row.insertCell(4);
+            row.insertCell(5);
         }
 
         setInterval(compute, REFRESH_TIME);
