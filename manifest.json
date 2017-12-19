@@ -1,0 +1,13 @@
+{
+  "manifest_version": 2,
+
+  "name": "binance plugin",
+  "description": "binance prices page helper",
+  "version": "1.0",
+  "content_scripts": [
+      {
+          "matches": ["https://www.binance.com/*"],
+          "js": ["jquery.js", "background.js"]
+      }
+  ]
+}
